@@ -1,0 +1,6 @@
+version: '2'
+
+services:
+  vpn_coredns:
+    build: ./coredns
+    image: coltmeister/vpn-coredns

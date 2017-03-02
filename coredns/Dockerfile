@@ -1,9 +1,10 @@
-FROM alpine:latest
+FROM ubuntu:xenial
 
-ARG GOPATH
 WORKDIR /opt
-ADD $GOPATH/bin/coredns coredns
-ADD Corefile.docker
+
+ADD ./coredns ./coredns
+ADD ./Corefile.docker ./Corefile
+
 EXPOSE 53
 
-CMD ["./coredns", "-conf", "Corefile.docker"]
+ENTRYPOINT ["./coredns"]
