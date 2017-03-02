@@ -7,11 +7,10 @@ import (
     "crypto/md5"
 )
 
-
 func watchFile(path string, delay int, action func(string) error) {
     previous := make([]byte, 0)
 
-    for ; true; {
+    for {
         current, err := hashFile(path)
 
         if err == nil {
