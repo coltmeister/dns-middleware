@@ -1,4 +1,4 @@
-package vpn
+package vpndns
 
 import (
     "net"
@@ -7,13 +7,13 @@ import (
     "golang.org/x/net/context"
 )
 
-type Vpn struct {}
+type VpnDns struct {}
 
-func (vpn Vpn) Name() string {
-    return "vpn"
+func (vpndns VpnDns) Name() string {
+    return "vpndns"
 }
 
-func (vpn Vpn) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
+func (vpndns VpnDns) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
     /* Get current request state */
     state := request.Request{W: w, Req: r}
 
