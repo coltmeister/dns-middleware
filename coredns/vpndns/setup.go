@@ -20,6 +20,26 @@ func init() {
     })
 }
 
+func setup(c *caddy.Controller) error {
+    if !c.NextArg() {
+        return middleware.Error("vpndns", c.ArgErr())
+    }
+
+    c.Next()
+
+    if c.NextArg() {
+        return middleware.Error("vpndns", c.ArgErr())
+    }
+
+    loadCache(c.Val(), cache)
+
+    dnsserver.GetConfig(c).AddMiddleware(func(next middleware.Handler) middleware.Handler {
+        return VpnDns{}
+    })
+
+    return nil
+}
+
 func loadCache(path string, m NameMap) error {
     f, err := os.Open(path)
 
@@ -45,21 +65,6 @@ func loadCache(path string, m NameMap) error {
     if err := scanner.Err(); err != nil {
         return err
     }
-
-    return nil
-}
-
-func setup(c *caddy.Controller) error {
-    loadCache("/etc/vpndns.conf", cache)
-    c.Next()
-
-    if c.NextArg() {
-        return middleware.Error("vpndns", c.ArgErr())
-    }
-
-    dnsserver.GetConfig(c).AddMiddleware(func(next middleware.Handler) middleware.Handler {
-        return VpnDns{}
-    })
 
     return nil
 }
