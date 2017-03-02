@@ -24,7 +24,9 @@ func (vpndns VpnDns) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.
     a.Authoritative = true
 
     /* Cache lookup */
-    if ip, ok := cache[state.Name()]; !ok {
+    ip, ok := cache[state.Name()]
+
+    if !ok {
         return dns.RcodeServerFailure, nil
     }
 
@@ -37,7 +39,7 @@ func (vpndns VpnDns) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.
         rr.(*dns.A).Hdr = dns.RR_Header {
             Name: state.QName(),
             Rrtype: dns.TypeA,
-            Class: state.QClass()
+            Class: state.QClass(),
         }
         rr.(*dns.A).A = net.ParseIP(ip).To4()
     case 2: // ipv6
@@ -45,7 +47,7 @@ func (vpndns VpnDns) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.
         rr.(*dns.AAAA).Hdr = dns.RR_Header{
             Name: state.QName(),
             Rrtype: dns.TypeAAAA,
-            Class: state.QClass()
+            Class: state.QClass(),
         }
         rr.(*dns.AAAA).AAAA = net.ParseIP(ip)
     }

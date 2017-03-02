@@ -16,11 +16,11 @@ var cache NameMap = make(NameMap)
 func init() {
     caddy.RegisterPlugin("vpndns", caddy.Plugin{
         ServerType: "dns",
-        Action: setup
+        Action: setup,
     })
 }
 
-func loadCache(path string, m *NameMap) error {
+func loadCache(path string, m NameMap) error {
     f, err := os.Open(path)
 
     if err != nil {
@@ -32,13 +32,13 @@ func loadCache(path string, m *NameMap) error {
 
     for scanner.Scan() {
         line := scanner.Text()
-        split := strings.split(line, "\t")
+        split := strings.Split(line, "\t")
 
         if len(split) != 2 {
             return errors.New("Malformed vpndns.conf")
         }
 
-        domainName, ipAddress = split[0], split[1]
+        domainName, ipAddress := split[0], split[1]
         m[domainName] = ipAddress
     }
 
@@ -50,7 +50,7 @@ func loadCache(path string, m *NameMap) error {
 }
 
 func setup(c *caddy.Controller) error {
-    loadCache("/etc/vpndns.conf", &cache)
+    loadCache("/etc/vpndns.conf", cache)
     c.Next()
 
     if c.NextArg() {
@@ -58,7 +58,7 @@ func setup(c *caddy.Controller) error {
     }
 
     dnsserver.GetConfig(c).AddMiddleware(func(next middleware.Handler) middleware.Handler {
-        return Vpn{}
+        return VpnDns{}
     })
 
     return nil
