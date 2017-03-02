@@ -10,8 +10,7 @@ import (
     "github.com/mholt/caddy"
 )
 
-type NameMap map[string]string
-var cache NameMap = make(NameMap)
+var cache ConcurrentMap = NewConcurrentMap()
 
 func init() {
     caddy.RegisterPlugin("vpndns", caddy.Plugin{
@@ -31,7 +30,8 @@ func setup(c *caddy.Controller) error {
         return middleware.Error("vpndns", c.ArgErr())
     }
 
-    loadCache(c.Val(), cache)
+    conf := c.Val()
+    go watchFile(conf, 2000, func(path string) error { return loadCache(path, &cache) })
 
     dnsserver.GetConfig(c).AddMiddleware(func(next middleware.Handler) middleware.Handler {
         return VpnDns{}
@@ -40,7 +40,7 @@ func setup(c *caddy.Controller) error {
     return nil
 }
 
-func loadCache(path string, m NameMap) error {
+func loadCache(path string, kv KeyValueStore) error {
     f, err := os.Open(path)
 
     if err != nil {
@@ -59,7 +59,7 @@ func loadCache(path string, m NameMap) error {
         }
 
         domainName, ipAddress := split[0], split[1]
-        m[domainName] = ipAddress
+        kv.Put(domainName, ipAddress)
     }
 
     if err := scanner.Err(); err != nil {

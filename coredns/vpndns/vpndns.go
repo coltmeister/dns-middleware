@@ -24,7 +24,7 @@ func (vpndns VpnDns) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.
     a.Authoritative = true
 
     /* Cache lookup */
-    ip, ok := cache[state.Name()]
+    ip, ok := cache.Get(state.Name())
 
     if !ok {
         return dns.RcodeServerFailure, nil
