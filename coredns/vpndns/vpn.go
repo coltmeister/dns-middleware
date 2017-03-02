@@ -23,24 +23,36 @@ func (vpndns VpnDns) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.
     a.Compress = true
     a.Authoritative = true
 
-    /* Resolve A and AAAA records to a Google IP address */
+    /* Cache lookup */
+    if ip, ok := cache[state.Name()]; !ok {
+        return dns.RcodeServerFailure, nil
+    }
+
+    /* Build response */
     var rr dns.RR
-    var g_ip string = "74.125.21.100"
 
     switch state.Family() {
-        case 1:
-            rr = new(dns.A)
-            rr.(*dns.A).Hdr = dns.RR_Header{Name: state.QName(), Rrtype: dns.TypeA, Class: state.QClass()}
-            rr.(*dns.A).A = net.ParseIP(g_ip).To4()
-        case 2:
-            rr = new(dns.AAAA)
-            rr.(*dns.AAAA).Hdr = dns.RR_Header{Name: state.QName(), Rrtype: dns.TypeAAAA, Class: state.QClass()}
-            rr.(*dns.AAAA).AAAA = net.ParseIP(g_ip)
+    case 1: // ipv4
+        rr = &dns.A{}
+        rr.(*dns.A).Hdr = dns.RR_Header {
+            Name: state.QName(),
+            Rrtype: dns.TypeA,
+            Class: state.QClass()
+        }
+        rr.(*dns.A).A = net.ParseIP(ip).To4()
+    case 2: // ipv6
+        rr = &dns.AAAA{}
+        rr.(*dns.AAAA).Hdr = dns.RR_Header{
+            Name: state.QName(),
+            Rrtype: dns.TypeAAAA,
+            Class: state.QClass()
+        }
+        rr.(*dns.AAAA).AAAA = net.ParseIP(ip)
     }
 
     a.Extra = []dns.RR{rr}
 
-    /* Set response bits and write response to client */
+    /* Write response out to client */
     state.SizeAndDo(a)
     w.WriteMsg(a)
 
